@@ -12,6 +12,7 @@ export default function Dashboard({ user }) {
     creditor: '',
     bank: '',
     description: '',
+    project: '',
     user_id: ''
   })
   const [error, setError] = useState('')
@@ -136,6 +137,7 @@ export default function Dashboard({ user }) {
         creditor: form.creditor,
         bank: form.bank,
         description: form.description,
+        project: form.project,
         user_id: isAdmin ? form.user_id : user.id
       }
 
@@ -153,6 +155,7 @@ export default function Dashboard({ user }) {
         creditor: '',
         bank: '',
         description: '',
+        project: '',
         user_id: ''
       })
       await fetchTransactions()
@@ -220,6 +223,7 @@ export default function Dashboard({ user }) {
         <input type="text" name="creditor" placeholder="Creditor" value={form.creditor} onChange={handleChange} required disabled={!emailVerified} /><br/>
         <input type="text" name="bank" placeholder="Bank" value={form.bank} onChange={handleChange} required disabled={!emailVerified} /><br/>
         <input type="text" name="description" placeholder="Description" value={form.description} onChange={handleChange} disabled={!emailVerified} /><br/><br/>
+        <input type="text" name="project" placeholder="Project" value={form.project} onChange={handleChange} disabled={!emailVerified} /><br/><br/>
         <button type="submit" disabled={!emailVerified}>Add Transaction</button>
       </form>
 
@@ -239,6 +243,7 @@ export default function Dashboard({ user }) {
               <th style={{ border: '1px solid #ddd', padding: '8px' }}>Creditor</th>
               <th style={{ border: '1px solid #ddd', padding: '8px' }}>Bank</th>
               <th style={{ border: '1px solid #ddd', padding: '8px' }}>Description</th>
+              <th style={{ border: '1px solid #ddd', padding: '8px' }}>Project</th>
               <th style={{ border: '1px solid #ddd', padding: '8px' }}>Action</th>
             </tr>
           </thead>
@@ -252,6 +257,7 @@ export default function Dashboard({ user }) {
                 <td style={{ border: '1px solid #ddd', padding: '8px' }}>{tx.creditor}</td>
                 <td style={{ border: '1px solid #ddd', padding: '8px' }}>{tx.bank}</td>
                 <td style={{ border: '1px solid #ddd', padding: '8px' }}>{tx.description}</td>
+                <td style={{ border: '1px solid #ddd', padding: '8px' }}>{tx.project}</td>
                 <td style={{ border: '1px solid #ddd', padding: '8px' }}>
                   <button onClick={() => handleDelete(tx.id)}>Delete</button>
                 </td>

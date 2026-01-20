@@ -5,6 +5,7 @@ import Layout from '../components/Layout'
 export default function AdminDashboard({ user }) {
   const [transactions, setTransactions] = useState([])
   const [filter, setFilter] = useState('')
+  const [projectFilter, setProjectFilter] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
   const [startDate, setStartDate] = useState('')
@@ -16,7 +17,8 @@ export default function AdminDashboard({ user }) {
     amount: '',
     creditor: '',
     bank: '',
-    description: ''
+    description: '',
+    project: ''
   })
 
   const handleLogout = async () => {
@@ -60,6 +62,7 @@ export default function AdminDashboard({ user }) {
         creditor,
         bank,
         description,
+        project,
         user_id,
         user:profiles(email)
       `)
@@ -94,6 +97,7 @@ export default function AdminDashboard({ user }) {
         creditor: form.creditor,
         bank: form.bank,
         description: form.description,
+        project: form.project,
         user_id: user.id
       }
 
@@ -110,7 +114,8 @@ export default function AdminDashboard({ user }) {
         amount: '',
         creditor: '',
         bank: '',
-        description: ''
+        description: '',
+        project: ''
       })
       await fetchTransactions()
     } catch (err) {
@@ -122,12 +127,14 @@ export default function AdminDashboard({ user }) {
   // Filter by description (case-insensitive)
   const filteredTransactions = transactions.filter(tx => {
     const descMatch = tx.description?.toLowerCase().includes(filter.toLowerCase())
+    const projectMatch = tx.project?.toLowerCase().includes(projectFilter.toLowerCase())
+
   
     let dateMatch = true
     if (startDate) dateMatch = new Date(tx.transaction_date) >= new Date(startDate)
     if (endDate) dateMatch = dateMatch && new Date(tx.transaction_date) <= new Date(endDate)
   
-    return descMatch && dateMatch
+    return descMatch && projectMatch && dateMatch
   })
   
   // Sum total amount
@@ -164,6 +171,7 @@ export default function AdminDashboard({ user }) {
         <input type="text" name="creditor" placeholder="Creditor" value={form.creditor} onChange={handleChange} required disabled={!emailVerified} /><br/>
         <input type="text" name="bank" placeholder="Bank" value={form.bank} onChange={handleChange} required disabled={!emailVerified} /><br/>
         <input type="text" name="description" placeholder="Description" value={form.description} onChange={handleChange} disabled={!emailVerified} /><br/><br/>
+        <input type="text" name="project" placeholder="Project" value={form.project} onChange={handleChange} disabled={!emailVerified} /><br/><br/>
         <button type="submit" disabled={!emailVerified}>Add Transaction</button>
       </form>
 
@@ -176,6 +184,15 @@ export default function AdminDashboard({ user }) {
         value={filter}
         onChange={(e) => setFilter(e.target.value)}
       />
+
+     <h3>Filter by Project</h3>
+     <input
+      type="text"
+      placeholder="Search project..."
+      value={projectFilter}
+      onChange={(e) => setProjectFilter(e.target.value)}
+    />
+
 
       <h3>Total Amount: #{totalAmount.toFixed(2)}</h3>
 
@@ -210,6 +227,7 @@ export default function AdminDashboard({ user }) {
             <th>Creditor</th>
             <th>Bank</th>
             <th>Description</th>
+            <th>Project</th>
             <th>Action</th>
           </tr>
         </thead>
@@ -223,6 +241,7 @@ export default function AdminDashboard({ user }) {
               <td>{tx.creditor}</td>
               <td>{tx.bank}</td>
               <td>{tx.description}</td>
+              <td>{tx.project}</td>
               <td><button onClick={() => handleDelete(tx.id)}>Delete</button></td>
             </tr>
           ))}

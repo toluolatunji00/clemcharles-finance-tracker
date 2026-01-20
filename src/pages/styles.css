@@ -7,8 +7,9 @@
 }
 
 /* ---------- APP SHELL ---------- */
-body, .app-shell {
-  min-height: 100vh;            /* fill viewport height */
+body,
+.app-shell {
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
   background: #f8fafc;
@@ -28,7 +29,7 @@ body, .app-shell {
   align-items: center;
   justify-content: center;
   position: relative;
-  flex-shrink: 0;               /* never shrink */
+  flex-shrink: 0;
 }
 
 .header img {
@@ -38,34 +39,40 @@ body, .app-shell {
   transform: translateY(-50%);
 }
 
-.header img.left { left: 20px; }
-.header img.right { right: 20px; }
+.header img.left {
+  left: 20px;
+}
+
+.header img.right {
+  right: 20px;
+}
 
 .header h1 {
   font-size: 20px;
   font-weight: 600;
   color: #2563eb;
+  text-align: center;
 }
 
 /* ---------- MAIN CONTAINER ---------- */
 .container {
-  flex: 1;                      /* fill remaining vertical space */
+  flex: 1;
   display: flex;
   flex-direction: column;
   max-width: 1100px;
-  margin: 40px auto;            /* vertical + horizontal centering */
+  margin: 40px auto;
   padding: 24px;
   background: white;
   border-radius: 10px;
 }
 
-/* Make forms inside container consistent */
+/* ---------- FORMS ---------- */
 .container form {
   display: grid;
   gap: 12px;
   width: 100%;
-  max-width: 420px;             /* consistent width for auth forms */
-  margin: 0 auto;               /* center form horizontally */
+  max-width: 420px;
+  margin: 0 auto;
 }
 
 /* ---------- INPUTS ---------- */
@@ -73,6 +80,7 @@ input {
   padding: 10px 12px;
   border-radius: 6px;
   border: 1px solid #cbd5f5;
+  font-size: 15px;
 }
 
 input:focus {
@@ -89,7 +97,8 @@ button {
   border: none;
   cursor: pointer;
   font-weight: 500;
-  margin: 16px;
+  font-size: 15px;
+  min-height: 40px;
 }
 
 button:hover {
@@ -116,24 +125,99 @@ button.danger {
 }
 
 /* ---------- TABLE ---------- */
+.table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
 table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 16px;
+  min-width: 700px; /* prevents squishing on mobile */
 }
 
-th, td {
+th,
+td {
   padding: 10px;
   border-bottom: 1px solid #e5e7eb;
+  text-align: left;
+  font-size: 14px;
 }
 
 th {
   background: #eff6ff;
-  text-align: left;
+  font-weight: 600;
 }
 
 /* ---------- UTILITIES ---------- */
 .error {
   color: #dc2626;
   margin-top: 10px;
+}
+
+/* =====================================================
+   📱 MOBILE RESPONSIVENESS
+   ===================================================== */
+@media (max-width: 768px) {
+  /* Header */
+  .header {
+    height: 60px;
+  }
+
+  .header img {
+    height: 30px;
+  }
+
+  .header img.left {
+    left: 10px;
+  }
+
+  .header img.right {
+    right: 10px;
+  }
+
+  .header h1 {
+    font-size: 16px;
+  }
+
+  /* Container */
+  .container {
+    margin: 16px;
+    padding: 16px;
+    border-radius: 8px;
+  }
+
+  /* Forms */
+  .container form {
+    max-width: 100%;
+  }
+
+  input {
+    font-size: 14px;
+  }
+
+  button {
+    width: 100%;
+    font-size: 16px;
+  }
+
+  /* Tables */
+  table {
+    font-size: 13px;
+  }
+
+  th,
+  td {
+    padding: 8px;
+  }
+
+  /* Footer */
+  .footer {
+    height: 50px;
+  }
+
+  .footer img {
+    height: 24px;
+  }
 }
