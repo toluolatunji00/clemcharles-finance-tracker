@@ -3,6 +3,8 @@ import { supabase } from '../supabase'
 import Layout from '../components/Layout'
 
 export default function AdminDashboard({ user }) {
+  const [editingId, setEditingId] = useState(null)
+  const [editForm, setEditForm] = useState({})
   const [transactions, setTransactions] = useState([])
   const [filter, setFilter] = useState('')
   const [projectFilter, setProjectFilter] = useState('')
@@ -20,6 +22,16 @@ export default function AdminDashboard({ user }) {
     description: '',
     project: ''
   })
+
+  const formatCurrency = (value) => {
+    if (value === null || value === undefined || isNaN(value)) return ''
+    return Number(value).toLocaleString('en-NG', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    })
+  }
+  
+  
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
@@ -157,6 +169,107 @@ export default function AdminDashboard({ user }) {
     }
   }
 
+  const startEdit = (tx) => {
+    setEditingId(tx.id)
+    setEditForm({
+      transaction_date: tx.transaction_date,
+      recipient: tx.recipient,
+      amount: tx.amount,
+      creditor: tx.creditor,
+      bank: tx.bank,
+      description: tx.description,
+      project: tx.project
+    })
+  }
+  
+  const cancelEdit = () => {
+    setEditingId(null)
+    setEditForm({})
+  }
+  
+  const saveEdit = async (id) => {
+    try {
+      console.log("SAVING:", editForm) // 🔍 keep this for now
+  
+      const { error } = await supabase
+        .from('transactions')
+        .update({
+          transaction_date: editForm.transaction_date,
+          recipient: editForm.recipient,
+          amount: Number(editForm.amount),
+          creditor: editForm.creditor,
+          bank: editForm.bank,
+          description: editForm.description,
+          project: editForm.project
+        })
+        .eq('id', id)
+  
+      if (error) throw error
+  
+      await fetchTransactions()
+  
+      setEditingId(null)
+      setEditForm(null) // ✅ not {}
+    } catch (err) {
+      setError(err.message)
+    }
+  }
+  
+
+  const handleEditChange = (e) => {
+    const { name, value } = e.target
+    setEditForm(prev => ({ ...prev, [name]: value }))
+  }
+
+  const exportToCSV = () => {
+    if (filteredTransactions.length === 0) {
+      alert('No transactions to export')
+      return
+    }
+  
+    const headers = [
+      'Date',
+      'User Email',
+      'Recipient',
+      'Amount',
+      'Creditor',
+      'Bank',
+      'Description',
+      'Project'
+    ]
+  
+    const rows = filteredTransactions.map(tx => [
+      tx.transaction_date,
+      tx.user?.email || '',
+      tx.recipient,
+      formatCurrency(tx.amount),
+      tx.creditor,
+      tx.bank,
+      tx.description || '',
+      tx.project || ''
+    ])
+  
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row =>
+        row.map(value => `"${String(value).replace(/"/g, '""')}"`).join(',')
+      )
+    ].join('\n')
+  
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+  
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', 'transactions.csv')
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+  
+  
+  
+
   return (
     <div style={{ padding: '20px' }}>
       <h2>Admin Dashboard</h2>
@@ -194,7 +307,8 @@ export default function AdminDashboard({ user }) {
     />
 
 
-      <h3>Total Amount: #{totalAmount.toFixed(2)}</h3>
+     <h3>Total Amount: ₦{formatCurrency(totalAmount)}</h3>
+
 
       {loading && <p>Loading transactions...</p>}
 
@@ -216,6 +330,11 @@ export default function AdminDashboard({ user }) {
         />
       </label>
 
+      <button onClick={exportToCSV} style={{ marginBottom: '10px' }}>
+  Export to CSV
+      </button>
+
+
       <h3>All Transactions</h3>
       <table border="1" cellPadding="6">
         <thead>
@@ -234,15 +353,101 @@ export default function AdminDashboard({ user }) {
         <tbody>
           {filteredTransactions.map(tx => (
             <tr key={tx.id}>
-              <td>{tx.transaction_date}</td>
-              <td>{tx.user?.email}</td>
-              <td>{tx.recipient}</td>
-              <td>{tx.amount}</td>
-              <td>{tx.creditor}</td>
-              <td>{tx.bank}</td>
-              <td>{tx.description}</td>
-              <td>{tx.project}</td>
-              <td><button onClick={() => handleDelete(tx.id)}>Delete</button></td>
+  <td>
+  {editingId === tx.id ? (
+    <input
+      type="date"
+      name="transaction_date"
+      value={editForm.transaction_date}
+      onChange={(e) =>
+        setEditForm({ ...editForm, transaction_date: e.target.value })
+      }
+    />
+  ) : (
+    tx.transaction_date
+  )}
+  </td>
+  <td>{tx.user?.email}</td>
+  <td>
+        {editingId === tx.id ? (
+          <input
+            name="recipient"
+            value={editForm.recipient}
+            onChange={handleEditChange}
+          />
+        ) : (
+          tx.recipient
+        )}
+  </td>
+  <td>
+    {editingId === tx.id ? (
+      <input
+        type="number"
+        name="amount"
+        value={editForm.amount}
+        onChange={handleEditChange}
+      />
+    ) : (
+      `₦${formatCurrency(tx.amount)}`
+    )}
+  </td>
+
+<td>
+        {editingId === tx.id ? (
+          <input
+            name="creditor"
+            value={editForm.creditor}
+            onChange={handleEditChange}
+          />
+        ) : (
+          tx.creditor
+        )}
+  </td>
+  <td>
+        {editingId === tx.id ? (
+          <input
+            name="bank"
+            value={editForm.bank}
+            onChange={handleEditChange}
+          />
+        ) : (
+          tx.bank
+        )}
+  </td>
+  <td>
+        {editingId === tx.id ? (
+          <input
+            name="description"
+            value={editForm.description}
+            onChange={handleEditChange}
+          />
+        ) : (
+          tx.description
+        )}
+  </td>
+  <td>
+        {editingId === tx.id ? (
+          <input
+            name="project"
+            value={editForm.project}
+            onChange={handleEditChange}
+          />
+        ) : (
+          tx.project
+        )}
+  </td>
+  <td>
+        {editingId === tx.id ? (
+          <>
+            <button type="button" onClick={() => saveEdit(tx.id)}>Save</button>
+            <button type="button" onClick={cancelEdit}>Cancel</button>
+          </>
+        ) : (
+          <>
+            <button type="button" onClick={() => handleDelete(tx.id)}>Delete</button>
+          </>
+        )}
+  </td>
             </tr>
           ))}
         </tbody>
