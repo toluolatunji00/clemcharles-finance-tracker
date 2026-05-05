@@ -79,6 +79,7 @@ export default function AdminDashboard({ user }) {
         user:profiles(email)
       `)
       .order('transaction_date', { ascending: false })
+      .range(0,5000)
 
     if (error) {
       setError(error.message)
@@ -189,9 +190,9 @@ export default function AdminDashboard({ user }) {
   
   const saveEdit = async (id) => {
     try {
-      console.log("SAVING:", editForm) // 🔍 keep this for now
+      console.log("SAVING:", editForm)
   
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('transactions')
         .update({
           transaction_date: editForm.transaction_date,
@@ -203,14 +204,19 @@ export default function AdminDashboard({ user }) {
           project: editForm.project
         })
         .eq('id', id)
+        .select()
+  
+      console.log("UPDATE RESULT:", data)
+      console.log("UPDATE ERROR:", error)
   
       if (error) throw error
   
       await fetchTransactions()
   
       setEditingId(null)
-      setEditForm(null) // ✅ not {}
+      setEditForm({})
     } catch (err) {
+      console.error("SAVE ERROR:", err)
       setError(err.message)
     }
   }
@@ -276,6 +282,8 @@ export default function AdminDashboard({ user }) {
       <p>Logged in as: {user.email}</p>
       <button onClick={handleLogout}>Log out</button>
 
+      <p>Total fetched: {transactions.length}</p>
+      <p>Total displayed: {filteredTransactions.length}</p>
       <h3>Add Transaction</h3>
       <form onSubmit={handleSubmit} style={{ marginBottom: '20px', padding: '10px', border: '1px solid #ccc' }}>
         <input type="date" name="transaction_date" value={form.transaction_date} onChange={handleChange} required disabled={!emailVerified} /><br/>
@@ -444,6 +452,7 @@ export default function AdminDashboard({ user }) {
           </>
         ) : (
           <>
+            <button type="button" onClick={() => startEdit(tx)}>Edit</button>
             <button type="button" onClick={() => handleDelete(tx.id)}>Delete</button>
           </>
         )}
