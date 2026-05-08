@@ -8,6 +8,7 @@ export default function AdminDashboard({ user }) {
   const [transactions, setTransactions] = useState([])
   const [filter, setFilter] = useState('')
   const [projectFilter, setProjectFilter] = useState('')
+  const [selectedUser, setSelectedUser] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
   const [startDate, setStartDate] = useState('')
@@ -39,8 +40,11 @@ export default function AdminDashboard({ user }) {
 
   useEffect(() => {
     checkEmailVerified()
-    fetchTransactions()
   }, [])
+  
+  useEffect(() => {
+    fetchTransactions()
+  }, [selectedUser])
 
   const checkEmailVerified = async () => {
     try {
@@ -63,8 +67,8 @@ export default function AdminDashboard({ user }) {
 
   const fetchTransactions = async () => {
     setLoading(true)
-
-    const { data, error } = await supabase
+  
+    let query = supabase
       .from('transactions')
       .select(`
         id,
@@ -79,14 +83,20 @@ export default function AdminDashboard({ user }) {
         user:profiles(email)
       `)
       .order('transaction_date', { ascending: false })
-      .range(0,5000)
-
+      .range(0, 5000)
+  
+    if (selectedUser) {
+      query = query.eq('user_id', selectedUser)
+    }
+  
+    const { data, error } = await query
+  
     if (error) {
       setError(error.message)
     } else {
       setTransactions(data)
     }
-
+  
     setLoading(false)
   }
 
@@ -171,6 +181,8 @@ export default function AdminDashboard({ user }) {
   }
 
   const startEdit = (tx) => {
+    console.log("EDIT CLICKED", tx.id)
+    
     setEditingId(tx.id)
     setEditForm({
       transaction_date: tx.transaction_date,
@@ -297,6 +309,24 @@ export default function AdminDashboard({ user }) {
       </form>
 
       {error && <p style={{ color: 'red' }}>{error}</p>}
+
+      <h3>Filter by User</h3>
+      <select
+  value={selectedUser}
+  onChange={(e) => setSelectedUser(e.target.value)}
+>
+  
+      <option value="">All Users</option>
+
+      {[...new Map(
+      transactions.map(tx => [tx.user_id, tx.user?.email])
+      ).entries()].map(([id, email]) => (
+      <option key={id} value={id}>
+      {email}
+      </option>
+      ))}
+      </select>
+
 
       <h3>Filter by Description</h3>
       <input

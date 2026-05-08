@@ -203,7 +203,7 @@ export default function Dashboard({ user }) {
       )}
       
       <button onClick={handleLogout}>Log out</button>
-
+      
       <h3>Add Transaction</h3>
       <form onSubmit={handleSubmit} style={{ marginBottom: '20px', padding: '10px', border: '1px solid #ccc', opacity: emailVerified ? 1 : 0.5 }}>
         {isAdmin && (
