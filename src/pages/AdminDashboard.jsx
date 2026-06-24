@@ -3,6 +3,9 @@ import { supabase } from '../supabase'
 import Layout from '../components/Layout'
 
 export default function AdminDashboard({ user }) {
+  const PAGE_SIZE = 500
+  const [page, setPage] = useState(0)
+  const [hasMore, setHasMore] = useState(true)
   const [editingId, setEditingId] = useState(null)
   const [editForm, setEditForm] = useState({})
   const [transactions, setTransactions] = useState([])
@@ -43,7 +46,8 @@ export default function AdminDashboard({ user }) {
   }, [])
   
   useEffect(() => {
-    fetchTransactions()
+    setPage(0)
+    fetchTransactions(0)
   }, [selectedUser])
 
   const checkEmailVerified = async () => {
@@ -65,8 +69,15 @@ export default function AdminDashboard({ user }) {
     }
   }
 
-  const fetchTransactions = async () => {
+  const fetchTransactions = async (pageNumber = 0) => {
     setLoading(true)
+
+    if (pageNumber === 0) {
+      setHasMore(true)
+    }
+
+    const from = pageNumber * PAGE_SIZE
+    const to = from + PAGE_SIZE - 1
   
     let query = supabase
       .from('transactions')
@@ -83,7 +94,7 @@ export default function AdminDashboard({ user }) {
         user:profiles(email)
       `)
       .order('transaction_date', { ascending: false })
-      .range(0, 5000)
+      .range(from, to)
   
     if (selectedUser) {
       query = query.eq('user_id', selectedUser)
@@ -94,9 +105,16 @@ export default function AdminDashboard({ user }) {
     if (error) {
       setError(error.message)
     } else {
-      setTransactions(data)
-    }
+      if (data.length < PAGE_SIZE) {
+        setHasMore(false)
+      }     
   
+     if (pageNumber === 0) {
+        setTransactions(data)
+      } else {
+        setTransactions(prev => [...prev, ...data])
+      }
+    }
     setLoading(false)
   }
 
@@ -296,6 +314,7 @@ export default function AdminDashboard({ user }) {
 
       <p>Total fetched: {transactions.length}</p>
       <p>Total displayed: {filteredTransactions.length}</p>
+
       <h3>Add Transaction</h3>
       <form onSubmit={handleSubmit} style={{ marginBottom: '20px', padding: '10px', border: '1px solid #ccc' }}>
         <input type="date" name="transaction_date" value={form.transaction_date} onChange={handleChange} required disabled={!emailVerified} /><br/>
@@ -371,6 +390,18 @@ export default function AdminDashboard({ user }) {
       <button onClick={exportToCSV} style={{ marginBottom: '10px' }}>
   Export to CSV
       </button>
+
+      {hasMore && (
+  <button
+    onClick={() => {
+      const nextPage = page + 1
+      setPage(nextPage)
+      fetchTransactions(nextPage)
+    }}
+  >
+    Load More
+  </button>
+)}
 
 
       <h3>All Transactions</h3>
@@ -491,6 +522,7 @@ export default function AdminDashboard({ user }) {
           ))}
         </tbody>
       </table>
+
     </div>
   )
 }
